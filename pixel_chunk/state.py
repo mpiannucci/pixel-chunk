@@ -1,16 +1,23 @@
 from pydantic import BaseModel
 import numpy as np
+from zarr import Array
 
 
 class DrawState(BaseModel):
     chunks: list[str]
 
     @classmethod
-    def from_numpy(cls, arr: np.ndarray):
-        return cls(chunks=rgba_to_hex(arr))
+    def from_zarr(cls, arr: Array):
+        return cls(chunks=rgba_to_hex(np.array(arr[:])))
 
-    def to_numpy(self):
-        return hex_to_rgba(self.chunks)
+
+class UpdateAction(BaseModel):
+    index: int
+    color: str
+
+    def apply(self, array: Array):
+        """Apply the update action to the source data array."""
+        array[self.index] = hex_to_rgba([self.color])[0]
 
 
 def hex_to_rgba(hex_list: list[str]) -> np.ndarray:

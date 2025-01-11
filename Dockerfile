@@ -8,5 +8,5 @@ ADD . /app
 WORKDIR /app
 RUN uv sync --frozen
 
-# Presuming there is a `my_app` command provided by the project
-CMD ["uv", "run", "my_app"]
+# Run the application.
+CMD ["/app/.venv/bin/fastapi", "run", "pixel_chunk/app.py", "--port", "8080", "--host", "0.0.0.0"]
