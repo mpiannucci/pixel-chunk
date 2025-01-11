@@ -21,6 +21,11 @@ export interface UpdateAction {
     color: string;
 }
 
+export const DEFAULT_DRAW_STATE: DrawState = {
+    chunks: Array(256).fill('#ffffffff'),
+    rows: 16,
+    cols: 16,
+};
 
 export function indexToRowCol(index: number, cols: number) {
     return [Math.floor(index / cols), index % cols];
@@ -30,18 +35,22 @@ export function parseProjectVersion(json: any): ProjectVersion {
     return {
         ...json,
         date: new Date(json.date),
-    }
+    };
 }
 
 export function parseProjectState(json: any): ProjectState {
     return {
-        ...json, 
+        ...json,
         versions: json.versions.map(parseProjectVersion),
-    }
+    };
 }
 
-export const DEFAULT_DRAW_STATE: DrawState = {
-    chunks: Array(256).fill('#ffffffff'),
-    rows: 16,
-    cols: 16,
+export async function fetchProjectState(
+    projectId: string,
+    version: string | null,
+): Promise<ProjectState> {
+    const url = `/projects/${projectId}${version ? `?version=${version}` : ''}`;
+    const response = await fetch(url);
+    const json = await response.json();
+    return parseProjectState(json);
 }

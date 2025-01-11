@@ -3,6 +3,7 @@ import { Grid } from '@/components/grid';
 import { Button } from '@/components/ui/button';
 import {
     DEFAULT_DRAW_STATE,
+    fetchProjectState,
     parseProjectState,
     ProjectState,
     UpdateAction,
@@ -21,16 +22,15 @@ export default function Project() {
         'ours',
     );
 
+    const version = searchParams.get('version');
+
     const query = useQuery({
-        queryKey: ['project', { projectId }],
+        queryKey: ['project', { projectId }, 'version', version],
         queryFn: async () => {
-            const response = await fetch(`/projects/${projectId}`);
-            const json = await response.json();
-            return parseProjectState(json);
+            if (!projectId) throw new Error('No project id found!');
+            return await fetchProjectState(projectId, version);
         },
     });
-
-    console.log(query.data);
 
     return (
         <div className="container flex flex-col mx-auto">

@@ -110,4 +110,4 @@ async def get_project(id: str, version: str | None = None):
             for v in versions
             if not v.message.startswith("Repository initialized")
         ],
-    ).model_dump_json()
+    ).model_dump()
