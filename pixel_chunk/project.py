@@ -105,5 +105,9 @@ async def get_project(id: str, version: str | None = None):
     return ProjectState(
         id=id,
         state=DrawState.from_zarr(arr),
-        versions=[ProjectVersion.from_snapshot(v) for v in versions],
-    ).dict()
+        versions=[
+            ProjectVersion.from_snapshot(v)
+            for v in versions
+            if not v.message.startswith("Repository initialized")
+        ],
+    ).model_dump_json()
