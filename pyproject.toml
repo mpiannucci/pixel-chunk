@@ -5,8 +5,16 @@ description = "A collaborative pixel art app backed by icechunk"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi>=0.115.6",
+    "fastapi[standard]>=0.115.6",
     "icechunk>=0.1.0a10",
+    "numpy>=2.2.1",
+    "pydantic>=2.10.5",
     "uvicorn>=0.34.0",
     "zarr>=3.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "ruff>=0.9.1",
 ]
