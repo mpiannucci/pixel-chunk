@@ -1,0 +1,12 @@
+[project]
+name = "pixel-chunk"
+version = "0.1.0"
+description = "A collaborative pixel art app backed by icechunk"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.6",
+    "icechunk>=0.1.0a10",
+    "uvicorn>=0.34.0",
+    "zarr>=3.0.0",
+]
