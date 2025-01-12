@@ -14,15 +14,18 @@ import {
 } from '@/state';
 import { useQuery } from '@tanstack/react-query';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 
 export default function Project() {
     const { projectId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+
     const editConnection: MutableRefObject<WebSocket | null> =
         useRef<WebSocket>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [currentColor, setCurrentColor] = useState('#ffffffff');
+    const [commitMessage, setCommitMessage] = useState('Updated some pixels');
     const [actions, setActions] = useState<UpdateAction[]>([]);
     const [rebaseStrategy, setRebaseStrategy] = useState<'ours' | 'theirs'>(
         'ours',
@@ -46,12 +49,18 @@ export default function Project() {
         const editorUrl = createEditConnectionUrl(projectId);
         editConnection.current = new WebSocket(editorUrl);
 
-        const editConnectionCurrent = editConnection.current;
+        editConnection.current.onmessage = (e) => {
+            console.log(e);
+            setIsEditing(false);
+            navigate(`/project/${projectId}`);
+        };
 
         return () => {
-            editConnectionCurrent?.close();
-            editConnection.current = null;
-        }
+            if (editConnection.current?.readyState === WebSocket.OPEN) {
+                editConnection.current.close();
+                editConnection.current = null;
+            }
+        };
     }, [isEditing, projectId]);
 
     return (
@@ -61,7 +70,7 @@ export default function Project() {
                     Project{' '}
                     <a
                         className="hover:text-blue-400 underline"
-                        href={`/projects/${projectId}`}
+                        href={`/project/${projectId}`}
                     >
                         {projectId}
                     </a>
@@ -100,12 +109,25 @@ export default function Project() {
                         <Textarea
                             id="commit-message"
                             placeholder="Updated some pixels"
+                            value={commitMessage}
+                            onChange={(e) => setCommitMessage(e.target.value)}
                         />
                         <Button
                             onClick={() => {
-                                setIsEditing(false);
+                                if (!editConnection.current) {
+                                    console.error('No active editing session!');
+                                    setIsEditing(false);
+                                    return;
+                                }
+                                // Send commit command to websocket
+                                const command = {
+                                    message: commitMessage,
+                                    changes: actions,
+                                };
 
-                                // TODO: Send commit command to websocket
+                                editConnection.current.send(
+                                    JSON.stringify(command),
+                                );
                             }}
                         >
                             Commit

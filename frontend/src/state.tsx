@@ -21,6 +21,11 @@ export interface UpdateAction {
     color: string;
 }
 
+export interface CommitCommand {
+    message: string;
+    changes: UpdateAction[];
+}
+
 export const DEFAULT_DRAW_STATE: DrawState = {
     chunks: Array(256).fill('#ffffffff'),
     rows: 16,
@@ -73,5 +78,5 @@ export function applyChanges(
 }
 
 export function createEditConnectionUrl(projectId: string): string {
-    return `wss:///projects/${projectId}/edit`;
+    return `ws://localhost:8000/projects/${projectId}/edit`;
 }

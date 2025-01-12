@@ -25,7 +25,7 @@ class SessionManager:
         session = repo.writable_session(DEFAULT_BRANCH)
         self.sessions[ws] = session
 
-    async def try_commit(self, ws: WebSocket, commit: CommitCommand) -> CommitSuccess:
+    def try_commit(self, ws: WebSocket, commit: CommitCommand) -> CommitSuccess:
         session = self.sessions[ws]
         commit_id = commit.apply(session=session)
         return CommitSuccess(latest_snapshot=commit_id)
@@ -68,11 +68,12 @@ async def get_project(repo: RepoDep, id: str, version: str | None = None):
 
 @project_router.websocket("/{id}/edit")
 async def edit_project(websocket: WebSocket, repo: RepoDep):
-    session_manager.connect(websocket, repo)
+    await session_manager.connect(websocket, repo)
     try:
         while True:
-            raw_data = await websocket.receive_json()
+            raw_data = await websocket.receive_text()
             command = CommitCommand.model_validate_json(raw_data)
-            print(command)
+            result = session_manager.try_commit(websocket, command)
+            await websocket.send_json(result.model_dump())
     except WebSocketDisconnect:
         session_manager.disconnect(websocket)
