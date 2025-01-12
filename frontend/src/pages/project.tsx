@@ -34,7 +34,7 @@ export default function Project() {
     });
 
     return (
-        <div className="container flex flex-col mx-auto">
+        <div className="container flex flex-col mx-auto p-4">
             <div className="flex flex-row items-center justify-between">
                 <h2 className="text-xl font-bold mt-8 mb-4">
                     Project {projectId}
