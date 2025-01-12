@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
+
 export default function Project() {
     const { projectId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
