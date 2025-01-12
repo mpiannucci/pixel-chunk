@@ -71,3 +71,7 @@ export function applyChanges(
     changes.forEach((change) => (cloned[change.index] = change.color));
     return cloned;
 }
+
+export function createEditConnectionUrl(projectId: string): string {
+    return `wss:///projects/${projectId}/edit`;
+}

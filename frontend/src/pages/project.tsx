@@ -1,8 +1,11 @@
 import { ColorPicker } from '@/components/color-picker';
 import { Grid } from '@/components/grid';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
     applyChanges,
+    createEditConnectionUrl,
     DEFAULT_DRAW_STATE,
     fetchProjectState,
     parseProjectState,
@@ -10,12 +13,14 @@ import {
     UpdateAction,
 } from '@/state';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
 export default function Project() {
     const { projectId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
+    const editConnection: MutableRefObject<WebSocket | null> =
+        useRef<WebSocket>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [currentColor, setCurrentColor] = useState('#ffffffff');
     const [actions, setActions] = useState<UpdateAction[]>([]);
@@ -33,11 +38,33 @@ export default function Project() {
         },
     });
 
+    useEffect(() => {
+        if (!projectId) {
+            return;
+        }
+
+        const editorUrl = createEditConnectionUrl(projectId);
+        editConnection.current = new WebSocket(editorUrl);
+
+        const editConnectionCurrent = editConnection.current;
+
+        return () => {
+            editConnectionCurrent?.close();
+            editConnection.current = null;
+        }
+    }, [isEditing, projectId]);
+
     return (
         <div className="container flex flex-col mx-auto p-4">
-            <div className="flex flex-row items-center justify-between">
+            <div className="flex flex-row items-center justify-between py-4">
                 <h2 className="text-xl font-bold mt-8 mb-4">
-                    Project {projectId}
+                    Project{' '}
+                    <a
+                        className="hover:text-blue-400 underline"
+                        href={`/projects/${projectId}`}
+                    >
+                        {projectId}
+                    </a>
                 </h2>
                 {!searchParams.get('version') && !isEditing && (
                     <Button onClick={() => setIsEditing(true)}>Edit</Button>
@@ -69,8 +96,19 @@ export default function Project() {
                             selectedColor={currentColor}
                             onColorChange={setCurrentColor}
                         />
-                        <Button onClick={() => setIsEditing(false)}>
-                            Save
+                        <Label htmlFor="commit-message">Message</Label>
+                        <Textarea
+                            id="commit-message"
+                            placeholder="Updated some pixels"
+                        />
+                        <Button
+                            onClick={() => {
+                                setIsEditing(false);
+
+                                // TODO: Send commit command to websocket
+                            }}
+                        >
+                            Commit
                         </Button>
                     </div>
                 )}

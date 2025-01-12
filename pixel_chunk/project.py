@@ -3,7 +3,7 @@ from typing import cast
 
 from icechunk import Repository, Session
 import zarr
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from pixel_chunk.dependencies import RepoDep
 from pixel_chunk.state import (
@@ -32,6 +32,9 @@ class SessionManager:
 
     async def disconnect(self, ws: WebSocket):
         del self.sessions[ws]
+
+
+session_manager = SessionManager()
 
 
 project_router = APIRouter(prefix="/projects")
@@ -65,5 +68,11 @@ async def get_project(repo: RepoDep, id: str, version: str | None = None):
 
 @project_router.websocket("/{id}/edit")
 async def edit_project(websocket: WebSocket, repo: RepoDep):
-    # TODO
-    pass
+    session_manager.connect(websocket, repo)
+    try:
+        while True:
+            raw_data = await websocket.receive_json()
+            command = CommitCommand.model_validate_json(raw_data)
+            print(command)
+    except WebSocketDisconnect:
+        session_manager.disconnect(websocket)
