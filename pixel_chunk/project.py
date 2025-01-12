@@ -1,17 +1,38 @@
 import uuid
 from typing import cast
 
+from icechunk import Repository, Session
 import zarr
 from fastapi import APIRouter, WebSocket
 
 from pixel_chunk.dependencies import RepoDep
 from pixel_chunk.state import (
+    CommitCommand,
+    CommitSuccess,
     DrawState,
     Project,
     ProjectState,
     ProjectVersion,
 )
 from pixel_chunk.utils.icechunk import DEFAULT_BRANCH, DRAWING_ARRAY_KEY
+
+
+class SessionManager:
+    sessions: dict[WebSocket, Session] = {}
+
+    async def connect(self, ws: WebSocket, repo: Repository):
+        await ws.accept()
+        session = repo.writable_session(DEFAULT_BRANCH)
+        self.sessions[ws] = session
+
+    async def try_commit(self, ws: WebSocket, commit: CommitCommand) -> CommitSuccess:
+        session = self.sessions[ws]
+        commit_id = commit.apply(session=session)
+        return CommitSuccess(latest_snapshot=commit_id)
+
+    async def disconnect(self, ws: WebSocket):
+        del self.sessions[ws]
+
 
 project_router = APIRouter(prefix="/projects")
 
