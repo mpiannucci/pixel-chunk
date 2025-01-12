@@ -54,3 +54,11 @@ export async function fetchProjectState(
     const json = await response.json();
     return parseProjectState(json);
 }
+
+export async function createNewProject(): Promise<string> {
+    const response = await fetch('/projects/new', {
+        method: 'post',
+    });
+    const json = await response.json();
+    return json.id as string;
+}

@@ -7,7 +7,11 @@ export default function Home() {
             <h1 className="text-2xl font-bold">
                 Start creating
             </h1>
-            <Button className="m-8">New Project</Button>
+            <Button className="m-8" onClick={async () => {
+                // TODO: Show loading spinner,
+                // TODO: Create new project
+                // TODO: Redirect to project page
+            }}>New Project</Button>
         </div>
     );
 }
