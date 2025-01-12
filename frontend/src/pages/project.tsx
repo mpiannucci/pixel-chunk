@@ -2,14 +2,20 @@ import { ColorPicker } from '@/components/color-picker';
 import { Grid } from '@/components/grid';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import {
     applyChanges,
+    CommitConflicts,
+    CommitSuccess,
     createEditConnectionUrl,
+    DEFAULT_COLOR,
+    DEFAULT_COMMIT_MESSAGE,
     DEFAULT_DRAW_STATE,
     fetchProjectState,
     parseProjectState,
     ProjectState,
+    RebaseStrategy,
     UpdateAction,
 } from '@/state';
 import { useQuery } from '@tanstack/react-query';
@@ -24,12 +30,14 @@ export default function Project() {
     const editConnection: MutableRefObject<WebSocket | null> =
         useRef<WebSocket>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [currentColor, setCurrentColor] = useState('#ffffffff');
-    const [commitMessage, setCommitMessage] = useState('Updated some pixels');
+    const [currentColor, setCurrentColor] = useState(DEFAULT_COLOR);
+    const [commitMessage, setCommitMessage] = useState(DEFAULT_COMMIT_MESSAGE);
     const [actions, setActions] = useState<UpdateAction[]>([]);
-    const [rebaseStrategy, setRebaseStrategy] = useState<'ours' | 'theirs'>(
-        'ours',
+    const [conflictedChunks, setConflictedChunks] = useState<number[] | null>(
+        null,
     );
+    const [rebaseStrategy, setRebaseStrategy] =
+        useState<RebaseStrategy>('ours');
 
     const version = searchParams.get('version');
 
@@ -50,9 +58,14 @@ export default function Project() {
         editConnection.current = new WebSocket(editorUrl);
 
         editConnection.current.onmessage = (e) => {
-            console.log(e);
-            setIsEditing(false);
-            navigate(`/project/${projectId}`);
+            const result: CommitSuccess | CommitConflicts = JSON.parse(e.data);
+            if ('conflicted_chunks' in result) {
+                setConflictedChunks(result.conflicted_chunks);
+            } else {
+                setIsEditing(false);
+                setConflictedChunks(null);
+                query.refetch();
+            }
         };
 
         return () => {
@@ -86,6 +99,8 @@ export default function Project() {
                         actions,
                     )}
                     cols={query.data?.state.cols ?? 16}
+                    conflicted_color="lime"
+                    conflicted_indices={conflictedChunks ?? []}
                     editMode={isEditing}
                     onPixelClick={(index) => {
                         if (!isEditing) return;
@@ -112,6 +127,27 @@ export default function Project() {
                             value={commitMessage}
                             onChange={(e) => setCommitMessage(e.target.value)}
                         />
+                        {conflictedChunks && (
+                            <div>
+                                <RadioGroup
+                                    id="rebase-strategy"
+                                    value={rebaseStrategy}
+                                    onChange={(e) => {
+                                        console.log(e);
+                                    }}
+                                >
+                                    <RadioGroupItem value="ours">
+                                        Ours
+                                    </RadioGroupItem>
+                                    <RadioGroupItem value="theirs">
+                                        Theirs
+                                    </RadioGroupItem>
+                                </RadioGroup>
+                                <Label htmlFor="rebase-strategy">
+                                    Rebase Strategy
+                                </Label>
+                            </div>
+                        )}
                         <Button
                             onClick={() => {
                                 if (!editConnection.current) {
@@ -130,7 +166,17 @@ export default function Project() {
                                 );
                             }}
                         >
-                            Commit
+                            {conflictedChunks ? 'Rebase & Commit' : 'Commit'}
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setActions([]);
+                                setCommitMessage(DEFAULT_COMMIT_MESSAGE);
+                                setConflictedChunks(null);
+                                setIsEditing(false);
+                            }}
+                        >
+                            Cancel
                         </Button>
                     </div>
                 )}

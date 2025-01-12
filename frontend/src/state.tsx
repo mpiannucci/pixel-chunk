@@ -26,6 +26,17 @@ export interface CommitCommand {
     changes: UpdateAction[];
 }
 
+export interface CommitSuccess {
+    latest_snapshot: string;
+}
+
+export interface CommitConflicts {
+    failed_at_snapshot: string;
+    conflicted_chunks: number[];
+}
+
+export type RebaseStrategy = 'ours' | 'theirs';
+
 export const DEFAULT_DRAW_STATE: DrawState = {
     chunks: Array(256).fill('#ffffffff'),
     rows: 16,
@@ -80,3 +91,6 @@ export function applyChanges(
 export function createEditConnectionUrl(projectId: string): string {
     return `ws://localhost:8000/projects/${projectId}/edit`;
 }
+
+export const DEFAULT_COLOR = '#ffffffff';
+export const DEFAULT_COMMIT_MESSAGE = 'Updated some pixels';

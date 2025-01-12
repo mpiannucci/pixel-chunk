@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import cast
+from typing import Literal, cast
 from icechunk import Session, SnapshotMetadata
 from pydantic import BaseModel
 import numpy as np
@@ -79,9 +79,17 @@ class CommitCommand(BaseModel):
         arr = cast(zarr.Array, root[DRAWING_ARRAY_KEY])
         for change in self.changes:
             arr[change.index] = hex_to_rgba([change.color])[0]
+    
 
-        return session.commit(self.message)
+class RebaseCommitCommand(BaseModel):
+    message: str
+    strategy: Literal['ours'] | Literal['theirs']
 
 
 class CommitSuccess(BaseModel):
     latest_snapshot: str
+
+
+class CommitConflicts(BaseModel):
+    failed_at_snapshot: str
+    conflicted_chunks: list[int]

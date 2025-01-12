@@ -1,13 +1,20 @@
 import uuid
 from typing import cast
 
-from icechunk import Repository, Session
+from icechunk import (
+    ConflictDetector,
+    ConflictError,
+    RebaseFailedError,
+    Repository,
+    Session,
+)
 import zarr
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from pixel_chunk.dependencies import RepoDep
 from pixel_chunk.state import (
     CommitCommand,
+    CommitConflicts,
     CommitSuccess,
     DrawState,
     Project,
@@ -25,10 +32,28 @@ class SessionManager:
         session = repo.writable_session(DEFAULT_BRANCH)
         self.sessions[ws] = session
 
-    def try_commit(self, ws: WebSocket, commit: CommitCommand) -> CommitSuccess:
+    def try_commit(self, ws: WebSocket, commit: CommitCommand) -> CommitSuccess | CommitConflicts:
         session = self.sessions[ws]
-        commit_id = commit.apply(session=session)
-        return CommitSuccess(latest_snapshot=commit_id)
+        commit.apply(session=session)
+
+        # Check for conflicts
+        try:
+            session.rebase(ConflictDetector())
+            commit_id = session.commit(commit.message)
+            return CommitSuccess(latest_snapshot=commit_id)
+        except RebaseFailedError as e:
+            failed_at_snapshot_id = e.snapshot_id
+
+            # We are only messing with chunks, so only chunks can have conflicts. 
+            # Plus we know that we only care about the root indice of the chunk for now, latest
+            # we could mix colors or something haha
+            conflicted_chunks = [
+                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks
+            ]
+            return CommitConflicts(
+                failed_at_snapshot=failed_at_snapshot_id,
+                conflicted_chunks=conflicted_chunks,
+            )
 
     async def disconnect(self, ws: WebSocket):
         del self.sessions[ws]
