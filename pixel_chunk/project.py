@@ -6,13 +6,12 @@ from fastapi import APIRouter, WebSocket
 
 from pixel_chunk.dependencies import RepoDep
 from pixel_chunk.state import (
-    DEFAULT_BRANCH,
-    DRAWING_ARRAY_KEY,
     DrawState,
     Project,
     ProjectState,
     ProjectVersion,
 )
+from pixel_chunk.utils.icechunk import DEFAULT_BRANCH, DRAWING_ARRAY_KEY
 
 project_router = APIRouter(prefix="/projects")
 
