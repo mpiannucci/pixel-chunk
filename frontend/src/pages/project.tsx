@@ -2,6 +2,7 @@ import { ColorPicker } from '@/components/color-picker';
 import { Grid } from '@/components/grid';
 import { Button } from '@/components/ui/button';
 import {
+    applyChanges,
     DEFAULT_DRAW_STATE,
     fetchProjectState,
     parseProjectState,
@@ -44,7 +45,11 @@ export default function Project() {
             </div>
             <div className="flex flex-row justify-between flex-wrap">
                 <Grid
-                    state={query.data?.state ?? DEFAULT_DRAW_STATE}
+                    colors={applyChanges(
+                        (query.data?.state ?? DEFAULT_DRAW_STATE).chunks,
+                        actions,
+                    )}
+                    cols={query.data?.state.cols ?? 16}
                     editMode={isEditing}
                     onPixelClick={(index) => {
                         if (!isEditing) return;

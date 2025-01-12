@@ -15,8 +15,10 @@ export function ColorPicker({
             <input
                 type="color"
                 id="colorPicker"
-                value={selectedColor}
-                onChange={(e) => onColorChange(e.target.value)}
+                // Alpha isnt supported, always use FF
+                value={selectedColor.slice(0, 7)}
+                // Alpha isnt supported, tack on FF
+                onChange={(e) => onColorChange(e.target.value + "ff")}
                 className="w-10 h-10 rounded cursor-pointer"
             />
             <span className="ml-2">{selectedColor}</span>

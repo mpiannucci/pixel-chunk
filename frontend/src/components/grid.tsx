@@ -1,24 +1,21 @@
-import { DrawState } from '@/state';
-
 interface GridProps {
-    state: DrawState;
+    colors: string[];
+    cols: number;
     editMode: boolean;
     onPixelClick: (index: number) => void;
 }
 
-export function Grid({ state, editMode, onPixelClick }: GridProps) {
-    const gridSize = state.cols;
-
+export function Grid({ colors, cols, editMode, onPixelClick }: GridProps) {
     return (
         <div
             className="grid gap-px mb-4 bg-gray-200"
             style={{
-                gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-                width: `${gridSize * 1.5}rem`,
-                height: `${gridSize * 1.5}rem`,
+                gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                width: `${cols * 1.5}rem`,
+                height: `${cols * 1.5}rem`,
             }}
         >
-            {state.chunks.map((color, index) => (
+            {colors.map((color, index) => (
                 <div
                     key={`${index}`}
                     className="bg-white hover:opacity-90 transition-opacity"

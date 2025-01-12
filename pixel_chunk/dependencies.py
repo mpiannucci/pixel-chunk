@@ -4,7 +4,7 @@ from cachetools import LRUCache
 from fastapi import Depends, HTTPException
 from icechunk import IcechunkError, Repository
 
-from pixel_chunk.state import create_storage
+from pixel_chunk.utils.icechunk import create_storage
 
 repo_cache = LRUCache(5)
 

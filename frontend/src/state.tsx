@@ -62,3 +62,12 @@ export async function createNewProject(): Promise<string> {
     const json = await response.json();
     return json.id as string;
 }
+
+export function applyChanges(
+    colors: string[],
+    changes: UpdateAction[],
+): string[] {
+    const cloned = [...colors];
+    changes.forEach((change) => (cloned[change.index] = change.color));
+    return cloned;
+}

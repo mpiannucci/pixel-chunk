@@ -9,10 +9,10 @@ DRAWING_ARRAY_KEY = "pixels"
 DEFAULT_BRANCH = "main"
 
 
-def create_storage(id: str, bucket: str, prefix: str):
+def create_storage(id: str):
     return s3_storage(
-        bucket=bucket,
-        prefix=f"{prefix}/{id}",
+        bucket="pixel-chunk",
+        prefix=f"projects/{id}",
         from_env=True,
     )
 
