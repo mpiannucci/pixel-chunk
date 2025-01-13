@@ -85,16 +85,29 @@ export default function Project() {
                         {projectId}
                     </a>
                 </h2>
-                {!searchParams.get('version') && !isEditing && (
-                    <Button
-                        onClick={async () => {
-                            await query.refetch();
-                            setIsEditing(true);
-                        }}
-                    >
-                        Edit
-                    </Button>
-                )}
+                <div className='flex flex-row space-x-2 ps-2'>
+                    {!isEditing && (
+                        <Button
+                            onClick={() => {
+                                if (!projectId) return;
+                                const queryParams = `?scale=20${version ? `&version=${version}` : ''}`;
+                                window?.open(`/projects/${projectId}/img${queryParams}`, '_blank')?.focus()
+                            }}
+                        >
+                            Export
+                        </Button>
+                    )}
+                    {!searchParams.get('version') && !isEditing && (
+                        <Button
+                            onClick={async () => {
+                                await query.refetch();
+                                setIsEditing(true);
+                            }}
+                        >
+                            Edit
+                        </Button>
+                    )}
+                </div>
             </div>
             <div className="flex flex-row justify-between flex-wrap">
                 <Grid

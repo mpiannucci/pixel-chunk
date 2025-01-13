@@ -1,6 +1,7 @@
 import uuid
 from typing import cast
 
+from fastapi.responses import StreamingResponse
 from icechunk import (
     ConflictDetector,
     RebaseFailedError,
@@ -21,7 +22,11 @@ from pixel_chunk.state import (
     ProjectVersion,
     RebaseCommitCommand,
 )
-from pixel_chunk.utils.icechunk import DEFAULT_BRANCH, DRAWING_ARRAY_KEY
+from pixel_chunk.utils.icechunk import (
+    DEFAULT_BRANCH,
+    DRAWING_ARRAY_KEY,
+    array_to_image_bytes,
+)
 
 
 class SessionManager:
@@ -113,6 +118,17 @@ async def get_project(repo: RepoDep, id: str, version: str | None = None):
             if not v.message.startswith("Repository initialized")
         ],
     ).model_dump()
+
+
+@project_router.get("/{id}/img")
+async def export_project(repo: RepoDep, id: str, version: str | None = None, scale: int = 1):
+    if not version:
+        version = repo.lookup_branch(DEFAULT_BRANCH)
+    session = repo.readonly_session(snapshot_id=version)
+    root = zarr.open_group(store=session.store, mode="r")
+    arr = cast(zarr.Array, root[DRAWING_ARRAY_KEY])
+    image_buffer = array_to_image_bytes(arr, scale=scale)
+    return StreamingResponse(image_buffer, media_type="image/png")
 
 
 @project_router.websocket("/{id}/edit")

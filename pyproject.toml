@@ -9,6 +9,7 @@ dependencies = [
     "fastapi[standard]>=0.115.6",
     "icechunk>=0.1.0a10",
     "numpy>=2.2.1",
+    "pillow>=11.1.0",
     "pydantic>=2.10.5",
     "uvicorn>=0.34.0",
     "zarr>=3.0.0",

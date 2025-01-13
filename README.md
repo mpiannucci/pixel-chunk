@@ -26,10 +26,6 @@ export BUCKET_NAME=pixel-chunk
 ### Run Locally
 
 ```bash
-# build the frontend
-cd frontend
-npm run build
-
 # start the backend
 uv run fastapi dev pixel_chunk/app.py
 ```
@@ -37,10 +33,6 @@ uv run fastapi dev pixel_chunk/app.py
 ### Deploy on `fly`
 
 ```bash
-# build the frontend
-cd frontend
-npm run build
-
 # deploy the full stack
 fly deploy
 ```
