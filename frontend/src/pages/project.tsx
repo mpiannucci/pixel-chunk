@@ -13,19 +13,16 @@ import {
     DEFAULT_COMMIT_MESSAGE,
     DEFAULT_DRAW_STATE,
     fetchProjectState,
-    parseProjectState,
-    ProjectState,
     RebaseStrategy,
     UpdateAction,
 } from '@/state';
 import { useQuery } from '@tanstack/react-query';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 
 export default function Project() {
     const { projectId } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
 
     const editConnection: MutableRefObject<WebSocket | null> =
         useRef<WebSocket>(null);
@@ -50,7 +47,7 @@ export default function Project() {
     });
 
     useEffect(() => {
-        if (!projectId) {
+        if (!projectId || !isEditing) {
             return;
         }
 
@@ -89,7 +86,14 @@ export default function Project() {
                     </a>
                 </h2>
                 {!searchParams.get('version') && !isEditing && (
-                    <Button onClick={() => setIsEditing(true)}>Edit</Button>
+                    <Button
+                        onClick={async () => {
+                            await query.refetch();
+                            setIsEditing(true);
+                        }}
+                    >
+                        Edit
+                    </Button>
                 )}
             </div>
             <div className="flex flex-row justify-between flex-wrap">
@@ -113,93 +117,175 @@ export default function Project() {
                         ]);
                     }}
                 />
-                {isEditing && (
-                    <div className="flex flex-col space-y-4">
-                        <h3 className="text-lg font-medium">Edit</h3>
-                        <ColorPicker
-                            selectedColor={currentColor}
-                            onColorChange={setCurrentColor}
-                        />
-                        <Label htmlFor="commit-message">Message</Label>
-                        <Textarea
-                            id="commit-message"
-                            placeholder="Updated some pixels"
-                            value={commitMessage}
-                            onChange={(e) => setCommitMessage(e.target.value)}
-                        />
-                        {conflictedChunks && (
-                            <div>
-                                <RadioGroup
-                                    id="rebase-strategy"
-                                    value={rebaseStrategy}
-                                    onChange={(e) => {
-                                        console.log(e);
-                                    }}
-                                >
-                                    <RadioGroupItem value="ours">
-                                        Ours
-                                    </RadioGroupItem>
-                                    <RadioGroupItem value="theirs">
-                                        Theirs
-                                    </RadioGroupItem>
-                                </RadioGroup>
-                                <Label htmlFor="rebase-strategy">
-                                    Rebase Strategy
-                                </Label>
-                            </div>
-                        )}
-                        <Button
-                            onClick={() => {
-                                if (!editConnection.current) {
-                                    console.error('No active editing session!');
-                                    setIsEditing(false);
-                                    return;
+                <div>
+                    {isEditing && (
+                        <div className="flex flex-col space-y-4">
+                            <h3 className="text-lg font-medium">Edit</h3>
+                            {!conflictedChunks && (
+                                <ColorPicker
+                                    selectedColor={currentColor}
+                                    onColorChange={setCurrentColor}
+                                />
+                            )}
+                            {conflictedChunks && (
+                                <div className="bg-red-200 p-4 rounded-md">
+                                    <p>
+                                        Conflicts were found while committing
+                                        your changes. You can choose to resolve
+                                        the conflicted chunks by preferring the
+                                        changes you have made, or the ones made
+                                        by others
+                                    </p>
+                                </div>
+                            )}
+                            <Label htmlFor="commit-message">Message</Label>
+                            <Textarea
+                                id="commit-message"
+                                placeholder="Updated some pixels"
+                                value={commitMessage}
+                                onChange={(e) =>
+                                    setCommitMessage(e.target.value)
                                 }
-                                // Send commit command to websocket
-                                const command = {
-                                    message: commitMessage,
-                                    changes: actions,
-                                };
-
-                                editConnection.current.send(
-                                    JSON.stringify(command),
-                                );
-                            }}
-                        >
-                            {conflictedChunks ? 'Rebase & Commit' : 'Commit'}
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                setActions([]);
-                                setCommitMessage(DEFAULT_COMMIT_MESSAGE);
-                                setConflictedChunks(null);
-                                setIsEditing(false);
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                    </div>
-                )}
-                {!isEditing && (
-                    <div className="flex flex-col">
-                        <h3 className="text-lg font-medium">Versions</h3>
-                        <ul className="list-disc pl-4">
-                            {query.data?.versions.map((version) => (
-                                <li
-                                    key={version.id}
-                                    className="text-sm hover:text-blue-400 underline"
-                                >
-                                    <Link
-                                        to={`/project/${projectId}?version=${version.id}`}
+                            />
+                            {conflictedChunks && (
+                                <div className="flex flex-col space-y-2">
+                                    <Label htmlFor="rebase-strategy">
+                                        Resolve conflicts using:
+                                    </Label>
+                                    <RadioGroup
+                                        id="rebase-strategy"
+                                        defaultValue="ours"
+                                        value={rebaseStrategy}
+                                        onValueChange={(value) =>
+                                            setRebaseStrategy(
+                                                value as RebaseStrategy,
+                                            )
+                                        }
                                     >
-                                        {version.message} -{' '}
-                                        {version.date.toLocaleString()}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                                        <div className="flex items-center flex-row space-x-2">
+                                            <RadioGroupItem
+                                                value="ours"
+                                                id="rebase-ours"
+                                                style={{
+                                                    backgroundColor:
+                                                        rebaseStrategy ===
+                                                        'ours'
+                                                            ? 'black'
+                                                            : 'white',
+                                                }}
+                                            />
+                                            <Label
+                                                htmlFor="rebase-ours"
+                                                style={{
+                                                    fontWeight:
+                                                        rebaseStrategy ===
+                                                        'ours'
+                                                            ? 'bold'
+                                                            : 'normal',
+                                                }}
+                                            >
+                                                Our Changes
+                                            </Label>
+                                        </div>
+                                        <div className="flex items-center flex-row space-x-2">
+                                            <RadioGroupItem
+                                                value="theirs"
+                                                id="rebase-theirs"
+                                                style={{
+                                                    backgroundColor:
+                                                        rebaseStrategy ===
+                                                        'theirs'
+                                                            ? 'black'
+                                                            : 'white',
+                                                }}
+                                            />
+                                            <Label
+                                                htmlFor="rebase-theirs"
+                                                style={{
+                                                    fontWeight:
+                                                        rebaseStrategy ===
+                                                        'theirs'
+                                                            ? 'bold'
+                                                            : 'normal',
+                                                }}
+                                            >
+                                                Their Changes
+                                            </Label>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+                            )}
+                            <Button
+                                onClick={() => {
+                                    if (!editConnection.current) {
+                                        console.error(
+                                            'No active editing session!',
+                                        );
+                                        setIsEditing(false);
+                                        return;
+                                    }
+
+                                    if (conflictedChunks) {
+                                        const command = {
+                                            message: commitMessage,
+                                            strategy: rebaseStrategy,
+                                        };
+
+                                        editConnection.current.send(
+                                            JSON.stringify(command),
+                                        );
+                                        return;
+                                    } else {
+                                        // Send commit command to websocket
+                                        const command = {
+                                            message: commitMessage,
+                                            changes: actions,
+                                        };
+
+                                        editConnection.current.send(
+                                            JSON.stringify(command),
+                                        );
+                                    }
+                                }}
+                            >
+                                {conflictedChunks
+                                    ? 'Rebase & Commit'
+                                    : 'Commit'}
+                            </Button>
+                            <Button
+                                className="bg-gray-500"
+                                onClick={() => {
+                                    setActions([]);
+                                    setCommitMessage(DEFAULT_COMMIT_MESSAGE);
+                                    setConflictedChunks(null);
+                                    setIsEditing(false);
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    )}
+                    {!isEditing && (
+                        <div className="flex flex-col">
+                            <h3 className="text-lg font-medium">Versions</h3>
+                            <ul className="list-disc pl-4">
+                                {query.data?.versions.map((version) => (
+                                    <li
+                                        key={version.id}
+                                        className="text-sm hover:text-blue-400 underline"
+                                    >
+                                        <Link
+                                            to={`/project/${projectId}?version=${version.id}`}
+                                        >
+                                            {version.message} -{' '}
+                                            {version.date.toLocaleString()}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

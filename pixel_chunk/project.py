@@ -1,5 +1,5 @@
 import uuid
-from typing import cast
+from typing import Union, cast
 
 from icechunk import (
     ConflictDetector,
@@ -20,6 +20,7 @@ from pixel_chunk.state import (
     Project,
     ProjectState,
     ProjectVersion,
+    RebaseCommitCommand,
 )
 from pixel_chunk.utils.icechunk import DEFAULT_BRANCH, DRAWING_ARRAY_KEY
 
@@ -32,7 +33,9 @@ class SessionManager:
         session = repo.writable_session(DEFAULT_BRANCH)
         self.sessions[ws] = session
 
-    def try_commit(self, ws: WebSocket, commit: CommitCommand) -> CommitSuccess | CommitConflicts:
+    def try_commit(
+        self, ws: WebSocket, commit: CommitCommand
+    ) -> CommitSuccess | CommitConflicts:
         session = self.sessions[ws]
         commit.apply(session=session)
 
@@ -44,18 +47,40 @@ class SessionManager:
         except RebaseFailedError as e:
             failed_at_snapshot_id = e.snapshot_id
 
-            # We are only messing with chunks, so only chunks can have conflicts. 
+            # We are only messing with chunks, so only chunks can have conflicts.
             # Plus we know that we only care about the root indice of the chunk for now, latest
             # we could mix colors or something haha
             conflicted_chunks = [
                 chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks
             ]
             return CommitConflicts(
+                source_snapshot=session.snapshot_id,
                 failed_at_snapshot=failed_at_snapshot_id,
                 conflicted_chunks=conflicted_chunks,
             )
 
-    async def disconnect(self, ws: WebSocket):
+    def try_rebase_commit(
+        self, ws: WebSocket, commit: RebaseCommitCommand
+    ) -> CommitSuccess | CommitConflicts:
+        session = self.sessions[ws]
+        resolver = commit.resolver
+
+        try:
+            session.rebase(resolver)
+            commit_id = session.commit(commit.message)
+            return CommitSuccess(latest_snapshot=commit_id)
+        except RebaseFailedError as e:
+            failed_at_snapshot_id = e.snapshot_id
+            conflicted_chunks = [
+                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks
+            ]
+            return CommitConflicts(
+                source_snapshot=session.snapshot_id,
+                failed_at_snapshot=failed_at_snapshot_id,
+                conflicted_chunks=conflicted_chunks,
+            )
+
+    def disconnect(self, ws: WebSocket):
         del self.sessions[ws]
 
 
@@ -97,8 +122,12 @@ async def edit_project(websocket: WebSocket, repo: RepoDep):
     try:
         while True:
             raw_data = await websocket.receive_text()
-            command = CommitCommand.model_validate_json(raw_data)
-            result = session_manager.try_commit(websocket, command)
+            try:
+                command = CommitCommand.model_validate_json(raw_data)
+                result = session_manager.try_commit(websocket, command)
+            except Exception:
+                command = RebaseCommitCommand.model_validate_json(raw_data)
+                result = session_manager.try_rebase_commit(websocket, command)
             await websocket.send_json(result.model_dump())
     except WebSocketDisconnect:
         session_manager.disconnect(websocket)

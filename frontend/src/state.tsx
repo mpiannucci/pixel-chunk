@@ -26,11 +26,17 @@ export interface CommitCommand {
     changes: UpdateAction[];
 }
 
+export interface RebaseCommitCommand {
+    message: string;
+    strategy: RebaseStrategy;
+}
+
 export interface CommitSuccess {
     latest_snapshot: string;
 }
 
 export interface CommitConflicts {
+    source_snapshot: string;
     failed_at_snapshot: string;
     conflicted_chunks: number[];
 }

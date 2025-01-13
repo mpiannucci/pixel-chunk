@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Literal, cast
-from icechunk import Session, SnapshotMetadata
+from icechunk import BasicConflictSolver, Session, SnapshotMetadata, VersionSelection
 from pydantic import BaseModel
 import numpy as np
 import zarr
@@ -79,11 +79,19 @@ class CommitCommand(BaseModel):
         arr = cast(zarr.Array, root[DRAWING_ARRAY_KEY])
         for change in self.changes:
             arr[change.index] = hex_to_rgba([change.color])[0]
-    
+
 
 class RebaseCommitCommand(BaseModel):
     message: str
-    strategy: Literal['ours'] | Literal['theirs']
+    strategy: Literal["ours"] | Literal["theirs"]
+
+    @property
+    def resolver(self) -> BasicConflictSolver:
+        if self.strategy == "ours":
+            chunk_selection = VersionSelection.UseOurs
+        else:
+            chunk_selection = VersionSelection.UseTheirs
+        return BasicConflictSolver(on_chunk_conflict=chunk_selection)
 
 
 class CommitSuccess(BaseModel):
@@ -91,5 +99,6 @@ class CommitSuccess(BaseModel):
 
 
 class CommitConflicts(BaseModel):
+    source_snapshot: str
     failed_at_snapshot: str
     conflicted_chunks: list[int]
