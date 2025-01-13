@@ -10,8 +10,8 @@ export default function Home() {
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
-    const [projectWidth, setProjectWidth] = useState(8);
-    const [projectHeight, setProjectHeight] = useState(8);
+    const [projectWidth, setProjectWidth] = useState(16);
+    const [projectHeight, setProjectHeight] = useState(16);
 
     return (
         <div className="flex flex-col items-center justify-center h-screen">
@@ -65,7 +65,7 @@ export default function Home() {
                 style={{ visibility: showOptions ? 'visible' : 'hidden' }}
             >
                 <div className="flex flex-row justify-between items-center space-x-2 w-42">
-                    <label htmlFor="width">Width (px)</label>
+                    <label htmlFor="width">Width</label>
                     <Input
                         id="width"
                         type="number"
@@ -79,7 +79,7 @@ export default function Home() {
                     />
                 </div>
                 <div className="flex flex-row justify-between items-center space-x-2 w-42">
-                    <label htmlFor="height">Height (px)</label>
+                    <label htmlFor="height">Height</label>
                     <Input
                         id="height"
                         type="number"
