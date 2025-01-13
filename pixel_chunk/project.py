@@ -1,9 +1,8 @@
 import uuid
-from typing import Union, cast
+from typing import cast
 
 from icechunk import (
     ConflictDetector,
-    ConflictError,
     RebaseFailedError,
     Repository,
     Session,

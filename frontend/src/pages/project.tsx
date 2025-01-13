@@ -22,7 +22,7 @@ import { Link, useParams, useSearchParams } from 'react-router';
 
 export default function Project() {
     const { projectId } = useParams();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, _setSearchParams] = useSearchParams();
 
     const editConnection: MutableRefObject<WebSocket | null> =
         useRef<WebSocket>(null);
@@ -253,7 +253,7 @@ export default function Project() {
                                     : 'Commit'}
                             </Button>
                             <Button
-                                className="bg-gray-500"
+                                variant={'destructive'}
                                 onClick={() => {
                                     setActions([]);
                                     setCommitMessage(DEFAULT_COMMIT_MESSAGE);
