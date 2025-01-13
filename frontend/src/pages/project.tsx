@@ -17,6 +17,7 @@ import {
     UpdateAction,
 } from '@/state';
 import { useQuery } from '@tanstack/react-query';
+import { RefreshCw } from 'lucide-react';
 import { MutableRefObject, useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 
@@ -75,23 +76,34 @@ export default function Project() {
 
     return (
         <div className="container flex flex-col mx-auto p-4">
-            <div className="flex flex-row items-center justify-between py-4">
+            <div className="flex flex-row items-center justify-between py-4 align-middle text-center h-16 mt-4 mb-8">
                 <h2 className="text-xl font-bold mt-8 mb-4">
-                    Project{' '}
                     <a
                         className="hover:text-blue-400 underline"
                         href={`/project/${projectId}`}
                     >
-                        {projectId}
+                        {projectId?.split('-')[0]}...
                     </a>
                 </h2>
-                <div className='flex flex-row space-x-2 ps-2'>
+                <div className="flex flex-row space-x-2 ps-2">
+                    {!isEditing && (
+                        <Button onClick={() => query.refetch()}>
+                            <RefreshCw color='white' />
+                        </Button>
+                    )}
                     {!isEditing && (
                         <Button
                             onClick={() => {
                                 if (!projectId) return;
-                                const queryParams = `?scale=20${version ? `&version=${version}` : ''}`;
-                                window?.open(`/projects/${projectId}/img${queryParams}`, '_blank')?.focus()
+                                const queryParams = `?scale=20${
+                                    version ? `&version=${version}` : ''
+                                }`;
+                                window
+                                    ?.open(
+                                        `/projects/${projectId}/img${queryParams}`,
+                                        '_blank',
+                                    )
+                                    ?.focus();
                             }}
                         >
                             Export

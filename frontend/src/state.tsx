@@ -98,8 +98,11 @@ export function applyChanges(
 }
 
 export function createEditConnectionUrl(projectId: string): string {
-    console.log(window.location.host);
-    return `wss://${window.location.host}/projects/${projectId}/edit`;
+    if (import.meta.env.MODE === 'development') {
+        return `ws://localhost:8000/projects/${projectId}/edit`;
+    } else {
+        return `wss://${window.location.host}/projects/${projectId}/edit`;
+    }
 }
 
 export const DEFAULT_COLOR = '#ffffffff';
