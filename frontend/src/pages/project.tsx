@@ -86,7 +86,7 @@ export default function Project() {
                         className="hover:text-blue-400 underline"
                         href={`/project/${projectId}`}
                     >
-                        {projectId?.split('-')[0]}...
+                        Project {projectId?.split('-')[0]}
                     </a>
                 </h2>
                 <div className="flex flex-row space-x-2 ps-2">
@@ -125,28 +125,31 @@ export default function Project() {
                     )}
                 </div>
             </div>
-            <div className="flex flex-row justify-between flex-wrap">
-                <Grid
-                    colors={applyChanges(
-                        (query.data?.state ?? DEFAULT_DRAW_STATE).chunks,
-                        actions,
-                    )}
-                    cols={query.data?.state.cols ?? 16}
-                    conflictedColor="lime"
-                    conflictedIndices={conflictedChunks ?? []}
-                    editMode={isEditing}
-                    onPixelClick={(index) => {
-                        if (!isEditing) return;
-                        setActions((actions) => [
-                            ...actions,
-                            {
-                                index: index,
-                                color: currentColor,
-                            },
-                        ]);
-                    }}
-                />
-                <div>
+            <div className="flex flex-row flex-wrap gap-x-8 gap-y-4">
+                <div className="flex w-full md:w-1/2 lg:w-7/12 aspect-square">
+                    <Grid
+                        colors={applyChanges(
+                            (query.data?.state ?? DEFAULT_DRAW_STATE).chunks,
+                            actions,
+                        )}
+                        cols={query.data?.state.cols ?? 16}
+                        rows={query.data?.state.rows ?? 16}
+                        conflictedColor="lime"
+                        conflictedIndices={conflictedChunks ?? []}
+                        editMode={isEditing}
+                        onPixelClick={(index) => {
+                            if (!isEditing) return;
+                            setActions((actions) => [
+                                ...actions,
+                                {
+                                    index: index,
+                                    color: currentColor,
+                                },
+                            ]);
+                        }}
+                    />
+                </div>
+                <div className="md:w-1/3 lg:w-1/4 w-full md:overflow-scroll aspect-square">
                     {isEditing && (
                         <div className="flex flex-col space-y-4">
                             <h3 className="text-lg font-medium">Edit</h3>
@@ -294,22 +297,26 @@ export default function Project() {
                                         ? 'Rebase & Commit'
                                         : 'Commit')}
                             </Button>
-                            <Button
-                                variant={'destructive'}
-                                onClick={() => {
-                                    setActions([]);
-                                    setCommitMessage(DEFAULT_COMMIT_MESSAGE);
-                                    setConflictedChunks(null);
-                                    setIsEditing(false);
-                                    setCommitPending(false);
-                                }}
-                            >
-                                Cancel
-                            </Button>
+                            {!commitPending && (
+                                <Button
+                                    variant={'destructive'}
+                                    onClick={() => {
+                                        setActions([]);
+                                        setCommitMessage(
+                                            DEFAULT_COMMIT_MESSAGE,
+                                        );
+                                        setConflictedChunks(null);
+                                        setIsEditing(false);
+                                        setCommitPending(false);
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                            )}
                         </div>
                     )}
                     {!isEditing && (
-                        <div className="flex flex-col">
+                        <div className="flex flex-col w-full">
                             <h3 className="text-lg font-medium">Versions</h3>
                             <ul className="list-disc pl-4">
                                 {query.data?.versions.map((version) => (

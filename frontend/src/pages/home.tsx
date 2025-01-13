@@ -10,8 +10,8 @@ export default function Home() {
     const navigate = useNavigate();
     const [isCreating, setIsCreating] = useState(false);
     const [showOptions, setShowOptions] = useState(false);
-    const [projectWidth, setProjectWidth] = useState(16);
-    const [projectHeight, setProjectHeight] = useState(16);
+    const [projectWidth, setProjectWidth] = useState(8);
+    const [projectHeight, setProjectHeight] = useState(8);
 
     return (
         <div className="flex flex-col items-center justify-center h-screen">
@@ -71,7 +71,7 @@ export default function Home() {
                         type="number"
                         value={projectWidth}
                         min={1}
-                        max={256}
+                        max={32}
                         className="w-16"
                         onChange={(e) =>
                             setProjectWidth(parseInt(e.target.value))
@@ -85,7 +85,7 @@ export default function Home() {
                         type="number"
                         value={projectHeight}
                         min={1}
-                        max={256}
+                        max={32}
                         className="w-16"
                         onChange={(e) =>
                             setProjectHeight(parseInt(e.target.value))

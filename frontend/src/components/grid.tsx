@@ -1,6 +1,7 @@
 interface GridProps {
     colors: string[];
     cols: number;
+    rows: number;
     conflictedIndices: number[];
     conflictedColor: string;
     editMode: boolean;
@@ -10,6 +11,7 @@ interface GridProps {
 export function Grid({
     colors,
     cols,
+    rows,
     conflictedIndices,
     conflictedColor,
     editMode,
@@ -17,11 +19,10 @@ export function Grid({
 }: GridProps) {
     return (
         <div
-            className="grid gap-px mb-4 bg-gray-200"
+            className="grid gap-px bg-gray-200 flex-1"
             style={{
-                gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-                width: `${cols * 1.5}rem`,
-                height: `${cols * 1.5}rem`,
+                gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                gridTemplateRows: `repeat(${rows}, 1fr)`,
             }}
         >
             {colors.map((color, index) => {
@@ -29,12 +30,13 @@ export function Grid({
                 return (
                     <div
                         key={`${index}`}
-                        className="bg-white hover:opacity-90 transition-opacity"
+                        className="hover:opacity-90 transition-opacity"
                         style={{
                             backgroundColor: color || 'white',
                             cursor: editMode ? 'pointer' : 'default',
-                            boxShadow: hasConflict ? `0 0 0 3px ${conflictedColor} inset` : 'none',
-
+                            boxShadow: hasConflict
+                                ? `0 0 0 3px ${conflictedColor} inset`
+                                : 'none',
                         }}
                         onClick={() => onPixelClick(index)}
                     />
