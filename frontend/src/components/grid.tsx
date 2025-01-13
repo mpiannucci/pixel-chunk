@@ -1,8 +1,8 @@
 interface GridProps {
     colors: string[];
     cols: number;
-    conflicted_indices: number[];
-    conflicted_color: string;
+    conflictedIndices: number[];
+    conflictedColor: string;
     editMode: boolean;
     onPixelClick: (index: number) => void;
 }
@@ -10,8 +10,8 @@ interface GridProps {
 export function Grid({
     colors,
     cols,
-    conflicted_indices,
-    conflicted_color,
+    conflictedIndices,
+    conflictedColor,
     editMode,
     onPixelClick,
 }: GridProps) {
@@ -25,7 +25,7 @@ export function Grid({
             }}
         >
             {colors.map((color, index) => {
-                const hasConflict = conflicted_indices.includes(index);
+                const hasConflict = conflictedIndices.includes(index);
                 return (
                     <div
                         key={`${index}`}
@@ -33,7 +33,7 @@ export function Grid({
                         style={{
                             backgroundColor: color || 'white',
                             cursor: editMode ? 'pointer' : 'default',
-                            boxShadow: hasConflict ? `0 0 0 3px ${conflicted_color} inset` : 'none',
+                            boxShadow: hasConflict ? `0 0 0 3px ${conflictedColor} inset` : 'none',
 
                         }}
                         onClick={() => onPixelClick(index)}

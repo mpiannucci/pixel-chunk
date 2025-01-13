@@ -1,5 +1,6 @@
 import { ColorPicker } from '@/components/color-picker';
 import { Grid } from '@/components/grid';
+import { LoadingSpinner } from '@/components/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -28,6 +29,7 @@ export default function Project() {
     const editConnection: MutableRefObject<WebSocket | null> =
         useRef<WebSocket>(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [commitPending, setCommitPending] = useState(false);
     const [currentColor, setCurrentColor] = useState(DEFAULT_COLOR);
     const [commitMessage, setCommitMessage] = useState(DEFAULT_COMMIT_MESSAGE);
     const [actions, setActions] = useState<UpdateAction[]>([]);
@@ -61,9 +63,11 @@ export default function Project() {
                 setConflictedChunks(result.conflicted_chunks);
             } else {
                 setIsEditing(false);
+                setActions([]);
                 setConflictedChunks(null);
                 query.refetch();
             }
+            setCommitPending(false);
         };
 
         return () => {
@@ -88,7 +92,7 @@ export default function Project() {
                 <div className="flex flex-row space-x-2 ps-2">
                     {!isEditing && (
                         <Button onClick={() => query.refetch()}>
-                            <RefreshCw color='white' />
+                            <RefreshCw color="white" />
                         </Button>
                     )}
                     {!isEditing && (
@@ -128,8 +132,8 @@ export default function Project() {
                         actions,
                     )}
                     cols={query.data?.state.cols ?? 16}
-                    conflicted_color="lime"
-                    conflicted_indices={conflictedChunks ?? []}
+                    conflictedColor="lime"
+                    conflictedIndices={conflictedChunks ?? []}
                     editMode={isEditing}
                     onPixelClick={(index) => {
                         if (!isEditing) return;
@@ -250,6 +254,8 @@ export default function Project() {
                                         return;
                                     }
 
+                                    setCommitPending(true);
+
                                     if (conflictedChunks) {
                                         const command = {
                                             message: commitMessage,
@@ -273,9 +279,20 @@ export default function Project() {
                                     }
                                 }}
                             >
-                                {conflictedChunks
-                                    ? 'Rebase & Commit'
-                                    : 'Commit'}
+                                {commitPending && (
+                                    <div className="flex flex-row space-x-2 items-center align-middle">
+                                        <a>Committing</a>
+                                        <LoadingSpinner
+                                            size={16}
+                                            color="white"
+                                            borderWidth={2}
+                                        />
+                                    </div>
+                                )}
+                                {!commitPending &&
+                                    (conflictedChunks
+                                        ? 'Rebase & Commit'
+                                        : 'Commit')}
                             </Button>
                             <Button
                                 variant={'destructive'}
@@ -284,6 +301,7 @@ export default function Project() {
                                     setCommitMessage(DEFAULT_COMMIT_MESSAGE);
                                     setConflictedChunks(null);
                                     setIsEditing(false);
+                                    setCommitPending(false);
                                 }}
                             >
                                 Cancel
