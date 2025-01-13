@@ -164,7 +164,7 @@ export default function Project() {
                                     <p>
                                         Conflicts were found while committing
                                         your changes. You can choose to resolve
-                                        the conflicted chunks by preferring the
+                                        the conflicted pixels by preferring the
                                         changes you have made, or the ones made
                                         by others
                                     </p>
