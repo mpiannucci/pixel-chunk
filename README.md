@@ -5,7 +5,7 @@ Try it out at [pixel-chunk.fly.dev](https://pixel-chunk.fly.dev)
 
 ### What is this?
 
-`pixel-chunks` is collaborative pixel art app, that allows users to draw on a shared canvas using transactional editing. 
+`pixel-chunk` is collaborative pixel art app, that allows users to draw on a shared canvas using transactional editing. 
 
 ### Why?
 
