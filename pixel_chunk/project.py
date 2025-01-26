@@ -55,7 +55,7 @@ class SessionManager:
             # Plus we know that we only care about the root indice of the chunk for now, latest
             # we could mix colors or something haha
             conflicted_chunks = [
-                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks
+                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks # type: ignore
             ]
             return CommitConflicts(
                 source_snapshot=session.snapshot_id,
@@ -76,7 +76,7 @@ class SessionManager:
         except RebaseFailedError as e:
             failed_at_snapshot_id = e.snapshot_id
             conflicted_chunks = [
-                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks
+                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks # type: ignore
             ]
             return CommitConflicts(
                 source_snapshot=session.snapshot_id,
@@ -124,7 +124,7 @@ async def get_project(repo: RepoDep, id: str, version: str | None = None):
 async def export_project(repo: RepoDep, id: str, version: str | None = None, scale: int = 1):
     if not version:
         version = repo.lookup_branch(DEFAULT_BRANCH)
-    session = repo.readonly_session(snapshot_id=version)
+    session = repo.readonly_session(snapshot=version)
     root = zarr.open_group(store=session.store, mode="r")
     arr = cast(zarr.Array, root[DRAWING_ARRAY_KEY])
     image_buffer = array_to_image_bytes(arr, scale=scale)
