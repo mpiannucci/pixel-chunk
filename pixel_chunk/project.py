@@ -105,8 +105,8 @@ async def new_project(rows: int = 16, cols: int = 16):
 async def get_project(repo: RepoDep, id: str, version: str | None = None):
     if not version:
         version = repo.lookup_branch(DEFAULT_BRANCH)
-    versions = repo.ancestry(version)
-    session = repo.readonly_session(snapshot_id=version)
+    versions = repo.ancestry(snapshot=version)
+    session = repo.readonly_session(snapshot=version)
     root = zarr.open_group(store=session.store, mode="r")
     arr = cast(zarr.Array, root[DRAWING_ARRAY_KEY])
     return ProjectState(
