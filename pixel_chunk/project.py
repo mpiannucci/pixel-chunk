@@ -55,7 +55,9 @@ class SessionManager:
             # Plus we know that we only care about the root indice of the chunk for now, latest
             # we could mix colors or something haha
             conflicted_chunks = [
-                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks # type: ignore
+                chunk[0]
+                for c in e.conflicts
+                for chunk in c.conflicted_chunks  # type: ignore
             ]
             return CommitConflicts(
                 source_snapshot=session.snapshot_id,
@@ -76,7 +78,9 @@ class SessionManager:
         except RebaseFailedError as e:
             failed_at_snapshot_id = e.snapshot_id
             conflicted_chunks = [
-                chunk[0] for c in e.conflicts for chunk in c.conflicted_chunks # type: ignore
+                chunk[0]
+                for c in e.conflicts
+                for chunk in c.conflicted_chunks  # type: ignore
             ]
             return CommitConflicts(
                 source_snapshot=session.snapshot_id,
@@ -105,23 +109,26 @@ async def new_project(rows: int = 16, cols: int = 16):
 async def get_project(repo: RepoDep, id: str, version: str | None = None):
     if not version:
         version = repo.lookup_branch(DEFAULT_BRANCH)
-    versions = repo.ancestry(snapshot=version)
+    version_iterator = repo.async_ancestry(snapshot=version)
+    versions = []
+    async for v in version_iterator:
+        if v.message.startswith("Repository initialized"):
+            continue
+        versions.append(ProjectVersion.from_snapshot(v))
     session = repo.readonly_session(snapshot=version)
     root = zarr.open_group(store=session.store, mode="r")
     arr = cast(zarr.Array, root[DRAWING_ARRAY_KEY])
     return ProjectState(
         id=id,
         state=DrawState.from_zarr(arr),
-        versions=[
-            ProjectVersion.from_snapshot(v)
-            for v in versions
-            if not v.message.startswith("Repository initialized")
-        ],
+        versions=versions,
     ).model_dump()
 
 
 @project_router.get("/{id}/img")
-async def export_project(repo: RepoDep, id: str, version: str | None = None, scale: int = 1):
+async def export_project(
+    repo: RepoDep, id: str, version: str | None = None, scale: int = 1
+):
     if not version:
         version = repo.lookup_branch(DEFAULT_BRANCH)
     session = repo.readonly_session(snapshot=version)

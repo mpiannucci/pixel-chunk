@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Literal, cast
-from icechunk import BasicConflictSolver, Session, SnapshotMetadata, VersionSelection
+from icechunk import BasicConflictSolver, Session, SnapshotInfo, VersionSelection
 from pydantic import BaseModel
 import numpy as np
 import zarr
@@ -46,7 +46,7 @@ class ProjectVersion(BaseModel):
     message: str
 
     @classmethod
-    def from_snapshot(cls, snapshot: SnapshotMetadata):
+    def from_snapshot(cls, snapshot: SnapshotInfo):
         return cls(
             id=snapshot.id,
             date=snapshot.written_at,
